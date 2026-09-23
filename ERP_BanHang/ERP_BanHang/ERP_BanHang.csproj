@@ -221,7 +221,6 @@
       <DependentUpon>ChiTietYeuCauTraHang.cs</DependentUpon>
     </Compile>
     <Compile Include="DataConnect.cs" />
-    <Compile Include="DieuHuongBanHang.cs" />
     <Compile Include="QlyGiaoHang.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -330,6 +329,7 @@
     <None Include="Resources\vinamilk.jpg" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="convertico-noodles_8932794.ico" />
     <Content Include="Resources\acecook.jpg" />
   </ItemGroup>
   <ItemGroup>

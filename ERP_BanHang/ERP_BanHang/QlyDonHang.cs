@@ -1,7 +1,6 @@
 using System;
 using System.Configuration;
 using System.Data;
-
 using System.Drawing;
 using System.Windows.Forms;
 using Npgsql;
@@ -13,12 +12,18 @@ namespace ERP_BanHang
         public static string CurrentEmployeeId { get; set; } = "";
         public static string CurrentEmployeeName { get; set; } = "";
         public static string CurrentRole { get; set; } = "";
-        private string connectionString = ConfigurationManager.ConnectionStrings["ERP_Connection"].ConnectionString;
+
+        private string connectionString = ConfigurationManager.ConnectionStrings["ERP_Connection"]?.ConnectionString
+            ?? ConfigurationManager.ConnectionStrings["ERP_BanHang"]?.ConnectionString;
+
         private DataTable dtDonHang;
-       
+
         private Timer longPressTimer;
         private int selectedRowIndexForDelete = -1;
-        private const int LONG_PRESS_DURATION = 1000; 
+        private const int LONG_PRESS_DURATION = 1000;
+
+        // Biến lưu trạng thái tab hiện tại: false = Chưa thanh toán (mặc định), true = Đã thanh toán
+        private bool isDaThanhToan = false;
 
         public QlyDonHang()
         {
@@ -37,17 +42,17 @@ namespace ERP_BanHang
         {
             this.WindowState = FormWindowState.Maximized;
 
-            if (cboFilterStatus.Items.Count > 0)
-                cboFilterStatus.SelectedIndex = 0;
-
             KhoiTaoCotBang();
             LoadDataDonHang();
 
-            // Đăng ký sự kiện chuột cho bảng để xử lý nhấn giữ
+            // Đăng ký sự kiện chuột cho bảng để xử lý nhấn giữ xóa dòng
             BangDonHang.MouseDown += BangDonHang_MouseDown;
             BangDonHang.MouseUp += BangDonHang_MouseUp;
         }
 
+        // ==========================================
+        // 1. KHỞI TẠO BẢNG (ĐÃ BỎ CỘT TRẠNG THÁI ĐƠN)
+        // ==========================================
         private void KhoiTaoCotBang()
         {
             BangDonHang.Columns.Clear();
@@ -58,7 +63,7 @@ namespace ERP_BanHang
             colMaDH.Name = "colMaDonHang";
             colMaDH.HeaderText = "MÃ ĐƠN HÀNG";
             colMaDH.DataPropertyName = "ID_DH";
-            colMaDH.FillWeight = 10;
+            colMaDH.FillWeight = 12;
             colMaDH.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
             colMaDH.DefaultCellStyle.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
             colMaDH.DefaultCellStyle.ForeColor = Color.FromArgb(13, 110, 253);
@@ -69,7 +74,7 @@ namespace ERP_BanHang
             colKH.Name = "colTenKhachHang";
             colKH.HeaderText = "TÊN KHÁCH HÀNG";
             colKH.DataPropertyName = "TenDoanhNghiep";
-            colKH.FillWeight = 20;
+            colKH.FillWeight = 22;
             BangDonHang.Columns.Add(colKH);
 
             // 3. Nhân viên tạo
@@ -77,7 +82,7 @@ namespace ERP_BanHang
             colNV.Name = "colTenNhanVien";
             colNV.HeaderText = "NHÂN VIÊN TẠO";
             colNV.DataPropertyName = "TenNV";
-            colNV.FillWeight = 14;
+            colNV.FillWeight = 16;
             BangDonHang.Columns.Add(colNV);
 
             // 4. Tổng số lượng
@@ -85,18 +90,19 @@ namespace ERP_BanHang
             colSL.Name = "colTongSoLuong";
             colSL.HeaderText = "TỔNG SỐ LƯỢNG";
             colSL.DataPropertyName = "TongSoLuong";
-            colSL.FillWeight = 9;
+            colSL.FillWeight = 10;
             colSL.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
             BangDonHang.Columns.Add(colSL);
 
             // 5. Tổng tiền
             DataGridViewTextBoxColumn colTT = new DataGridViewTextBoxColumn();
             colTT.Name = "colTongTien";
-            colTT.HeaderText = "TỔNG TIỀN";
+            colTT.HeaderText = "TỔNG TIỀN (VNĐ)";
             colTT.DataPropertyName = "TongTienCalc";
-            colTT.FillWeight = 12;
+            colTT.FillWeight = 14;
             colTT.DefaultCellStyle.Format = "N0";
             colTT.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight;
+            colTT.DefaultCellStyle.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
             BangDonHang.Columns.Add(colTT);
 
             // 6. Ngày tạo
@@ -104,62 +110,54 @@ namespace ERP_BanHang
             colNgay.Name = "colNgayTao";
             colNgay.HeaderText = "NGÀY TẠO";
             colNgay.DataPropertyName = "NgayTao";
-            colNgay.FillWeight = 11;
+            colNgay.FillWeight = 13;
             colNgay.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
             BangDonHang.Columns.Add(colNgay);
 
-            // 7. Trạng thái đơn
-            DataGridViewTextBoxColumn colTTDH = new DataGridViewTextBoxColumn();
-            colTTDH.Name = "colTrangThaiDonHang";
-            colTTDH.HeaderText = "TRẠNG THÁI ĐƠN";
-            colTTDH.DataPropertyName = "TrangThaiDH";
-            colTTDH.FillWeight = 10;
-            colTTDH.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
-            BangDonHang.Columns.Add(colTTDH);
-
-            // 8. Trạng thái thanh toán
+            // 7. Trạng thái thanh toán
             DataGridViewTextBoxColumn colTTTT = new DataGridViewTextBoxColumn();
             colTTTT.Name = "colTrangThaiThanhToan";
             colTTTT.HeaderText = "THANH TOÁN";
             colTTTT.DataPropertyName = "TrangThaiTT";
-            colTTTT.FillWeight = 11;
+            colTTTT.FillWeight = 13;
             colTTTT.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
             BangDonHang.Columns.Add(colTTTT);
 
-            // 9. Nút Xuất Hóa Đơn
+            // 8. Nút Xuất Hóa Đơn
             DataGridViewButtonColumn colXuatHD = new DataGridViewButtonColumn();
             colXuatHD.Name = "colXuatHoaDon";
             colXuatHD.HeaderText = "THAO TÁC";
             colXuatHD.Text = "Xuất hóa đơn";
             colXuatHD.UseColumnTextForButtonValue = true;
             colXuatHD.FlatStyle = FlatStyle.Flat;
-            colXuatHD.FillWeight = 9;
+            colXuatHD.FillWeight = 11;
             BangDonHang.Columns.Add(colXuatHD);
 
             BangDonHang.AllowUserToResizeColumns = true;
             BangDonHang.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
         }
 
+        // ==========================================
+        // 2. TẢI DỮ LIỆU TỪ CSDL NEON/POSTGRESQL
+        // ==========================================
         private void LoadDataDonHang()
         {
-            // Truy vấn hỗ trợ ghép chuỗi NULL trong PostgreSQL (COALESCE thay cho ISNULL)
             string query = @"
-        SELECT 
-            DH.ID_DH,
-            KH.TenDoanhNghiep,
-            NV.TenNV,
-            COALESCE(SUM(CTDH.SoLuong), 0) AS TongSoLuong,
-            COALESCE(SUM(CTDH.ThanhTien), 0) AS TongTienCalc,
-            DH.NgayTao,
-            DH.TrangThai AS TrangThaiDH,
-            COALESCE(HD.TrangThai, N'Chưa thanh toán') AS TrangThaiTT
-        FROM DonHang DH
-        INNER JOIN KhachHang KH ON DH.ID_KH = KH.ID_KH
-        INNER JOIN NhanVien NV ON DH.ID_NV = NV.ID_NV
-        LEFT JOIN ChiTietDonHang CTDH ON DH.ID_DH = CTDH.ID_DH
-        LEFT JOIN HoaDon HD ON DH.ID_DH = HD.ID_DH
-        GROUP BY DH.ID_DH, KH.TenDoanhNghiep, NV.TenNV, DH.NgayTao, DH.TrangThai, HD.TrangThai
-        ORDER BY DH.NgayTao DESC";
+                SELECT 
+                    DH.ID_DH,
+                    KH.TenDoanhNghiep,
+                    NV.TenNV,
+                    COALESCE(SUM(CTDH.SoLuong), 0) AS TongSoLuong,
+                    COALESCE(SUM(CTDH.ThanhTien), 0) AS TongTienCalc,
+                    DH.NgayTao,
+                    COALESCE(HD.TrangThai, N'Chưa thanh toán') AS TrangThaiTT
+                FROM DonHang DH
+                INNER JOIN KhachHang KH ON DH.ID_KH = KH.ID_KH
+                INNER JOIN NhanVien NV ON DH.ID_NV = NV.ID_NV
+                LEFT JOIN ChiTietDonHang CTDH ON DH.ID_DH = CTDH.ID_DH
+                LEFT JOIN HoaDon HD ON DH.ID_DH = HD.ID_DH
+                GROUP BY DH.ID_DH, KH.TenDoanhNghiep, NV.TenNV, DH.NgayTao, HD.TrangThai
+                ORDER BY DH.NgayTao DESC";
 
             using (NpgsqlConnection conn = new NpgsqlConnection(connectionString))
             {
@@ -170,39 +168,108 @@ namespace ERP_BanHang
                     dtDonHang = new DataTable();
                     da.Fill(dtDonHang);
 
-                    BangDonHang.DataSource = dtDonHang;
+                    LocDuLieu();
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show("Lỗi kết nối CSDL: " + ex.Message, "Lỗi PostgreSQL", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show("Lỗi kết nối CSDL PostgreSQL: " + ex.Message, "Lỗi PostgreSQL", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
         }
 
+        // ==========================================
+        // 3. XỬ LÝ CHUYỂN TAB CHƯA / ĐÃ THANH TOÁN
+        // ==========================================
+        private void btnTabChuaThanhToan_Click(object sender, EventArgs e)
+        {
+            isDaThanhToan = false;
+
+            // Đổi màu sắc giao diện active tab
+            btnTabChuaThanhToan.BackColor = Color.FromArgb(13, 110, 253);
+            btnTabChuaThanhToan.ForeColor = Color.White;
+
+            btnTabDaThanhToan.BackColor = Color.LightGray;
+            btnTabDaThanhToan.ForeColor = Color.Black;
+
+            LocDuLieu();
+        }
+
+        private void btnTabDaThanhToan_Click(object sender, EventArgs e)
+        {
+            isDaThanhToan = true;
+
+            // Đổi màu sắc giao diện active tab
+            btnTabDaThanhToan.BackColor = Color.FromArgb(13, 110, 253);
+            btnTabDaThanhToan.ForeColor = Color.White;
+
+            btnTabChuaThanhToan.BackColor = Color.LightGray;
+            btnTabChuaThanhToan.ForeColor = Color.Black;
+
+            LocDuLieu();
+        }
+
+        // ==========================================
+        // 4. LỌC DỮ LIỆU THEO TÌM KIẾM VÀ TAB
+        // ==========================================
+        private void txtSearch_TextChanged(object sender, EventArgs e)
+        {
+            LocDuLieu();
+        }
+
+        private void LocDuLieu()
+        {
+            if (dtDonHang == null) return;
+
+            string keyword = txtSearch.Text.Trim().Replace("'", "''");
+
+            DataView dv = dtDonHang.DefaultView;
+            string filter = "1=1";
+
+            // Lọc theo từ khóa tìm kiếm
+            if (!string.IsNullOrEmpty(keyword))
+            {
+                filter += $" AND (ID_DH LIKE '%{keyword}%' OR TenDoanhNghiep LIKE '%{keyword}%' OR TenNV LIKE '%{keyword}%')";
+            }
+
+            // Lọc theo trạng thái tab
+            if (isDaThanhToan)
+            {
+                filter += " AND TrangThaiTT = 'Đã thanh toán'";
+            }
+            else
+            {
+                filter += " AND (TrangThaiTT IS NULL OR TrangThaiTT <> 'Đã thanh toán')";
+            }
+
+            dv.RowFilter = filter;
+            BangDonHang.DataSource = dv;
+        }
+
+        // ==========================================
+        // 5. XỬ LÝ NHẤN GIỮ ĐỂ XÓA ĐƠN HÀNG
+        // ==========================================
         private void BangDonHang_MouseDown(object sender, MouseEventArgs e)
         {
             if (e.Button == MouseButtons.Left)
             {
                 DataGridView.HitTestInfo hit = BangDonHang.HitTest(e.X, e.Y);
 
-                // Kiểm tra xem chuột có nhấn đúng vào một dòng hợp lệ (không phải Header và không phải cột nút bấm)
                 if (hit.RowIndex >= 0 && BangDonHang.Columns[hit.ColumnIndex].Name != "colXuatHoaDon")
                 {
                     selectedRowIndexForDelete = hit.RowIndex;
-                    longPressTimer.Start(); // Kích hoạt đếm ngược 1s
+                    longPressTimer.Start();
                 }
             }
         }
 
         private void BangDonHang_MouseUp(object sender, MouseEventArgs e)
         {
-            // Nhả chuột trước 1s thì dừng đếm, coi như click bình thường
             longPressTimer.Stop();
         }
 
         private void LongPressTimer_Tick(object sender, EventArgs e)
         {
-            longPressTimer.Stop(); // Dừng Timer ngay lập tức sau khi đủ 1s
+            longPressTimer.Stop();
 
             if (selectedRowIndexForDelete >= 0 && selectedRowIndexForDelete < BangDonHang.Rows.Count)
             {
@@ -300,9 +367,8 @@ namespace ERP_BanHang
         }
 
         // ==========================================
-        // CÁC SỰ KIỆN KHÁC
+        // 6. ĐỊNH DẠNG MÀU SẮC BẢNG & SỰ KIỆN CLICK
         // ==========================================
-
         private void BangDonHang_CellFormatting(object sender, DataGridViewCellFormattingEventArgs e)
         {
             if (e.Value is DateTime)
@@ -320,10 +386,11 @@ namespace ERP_BanHang
                     e.CellStyle.ForeColor = Color.FromArgb(21, 87, 36);
                     e.CellStyle.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
                 }
-                else if (status.Contains("Chưa") || status.Contains("một phần"))
+                else
                 {
                     e.CellStyle.BackColor = Color.FromArgb(255, 243, 205);
                     e.CellStyle.ForeColor = Color.FromArgb(133, 100, 4);
+                    e.CellStyle.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
                 }
             }
         }
@@ -349,43 +416,9 @@ namespace ERP_BanHang
             }
         }
 
-        private void txtSearch_TextChanged(object sender, EventArgs e)
-        {
-            LocDuLieu();
-        }
-
-        private void cboFilterStatus_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            LocDuLieu();
-        }
-
-        private void LocDuLieu()
-        {
-            if (dtDonHang == null) return;
-
-            string keyword = txtSearch.Text.Trim().Replace("'", "''");
-            if (keyword == "Tìm kiếm mã đơn, khách hàng...") keyword = "";
-
-            string statusFilter = cboFilterStatus.SelectedItem?.ToString();
-
-            DataView dv = dtDonHang.DefaultView;
-            string filter = "1=1";
-
-            if (!string.IsNullOrEmpty(keyword))
-            {
-                filter += $" AND (ID_DH LIKE '%{keyword}%' OR TenDoanhNghiep LIKE '%{keyword}%' OR TenNV LIKE '%{keyword}%')";
-            }
-
-            if (!string.IsNullOrEmpty(statusFilter) && statusFilter != "Tất cả trạng thái")
-            {
-                filter += $" AND TrangThaiDH = '{statusFilter}'";
-            }
-
-            dv.RowFilter = filter;
-            BangDonHang.DataSource = dv;
-        }
-
-
+        // ==========================================
+        // 7. ĐIỀU HƯỚNG MENU SIDEBAR
+        // ==========================================
         private void btnSanPham_Click(object sender, EventArgs e)
         {
             this.Hide();
@@ -421,10 +454,8 @@ namespace ERP_BanHang
         private void btnCreateOrder_Click(object sender, EventArgs e)
         {
             TaoDonHang taoDonHang = new TaoDonHang();
-            taoDonHang.ShowDialog();
             if (taoDonHang.ShowDialog() == DialogResult.OK)
             {
-                // Tự động tải lại dữ liệu mới nhất từ CSDL Neon vào DataGridView
                 LoadDataDonHang();
             }
         }
@@ -449,29 +480,23 @@ namespace ERP_BanHang
             {
                 try
                 {
-                    // 1. Xóa file phiên làm việc tạm (nếu có)
                     string tempPath = System.IO.Path.Combine(Application.StartupPath, "session.txt");
                     if (System.IO.File.Exists(tempPath))
                     {
                         System.IO.File.Delete(tempPath);
                     }
 
-                    // 2. Thuật toán tìm file ERP_Khach.exe linh hoạt trên mọi máy
                     string baseDir = Application.StartupPath;
                     string targetExe = "ERP_Khach.exe";
                     string pathExeDangNhap = "";
 
-                    // Kiểm tra các vị trí file exe có thể nằm
                     string[] possiblePaths = new string[]
                     {
-                // Khi chạy Release / Đóng gói chung thư mục
-                System.IO.Path.Combine(baseDir, targetExe),
-                System.IO.Path.Combine(baseDir, "..", targetExe),
-                System.IO.Path.Combine(baseDir, "..", "ERP_Khach", targetExe),
-                
-                // Khi chạy Debug trong Visual Studio
-                System.IO.Path.GetFullPath(System.IO.Path.Combine(baseDir, @"..\..\..\..\ERP_Khach\bin\Debug\ERP_Khach.exe")),
-                System.IO.Path.GetFullPath(System.IO.Path.Combine(baseDir, @"..\..\..\..\ERP_Khach\bin\Release\ERP_Khach.exe"))
+                        System.IO.Path.Combine(baseDir, targetExe),
+                        System.IO.Path.Combine(baseDir, "..", targetExe),
+                        System.IO.Path.Combine(baseDir, "..", "ERP_Khach", targetExe),
+                        System.IO.Path.GetFullPath(System.IO.Path.Combine(baseDir, @"..\..\..\..\ERP_Khach\bin\Debug\ERP_Khach.exe")),
+                        System.IO.Path.GetFullPath(System.IO.Path.Combine(baseDir, @"..\..\..\..\ERP_Khach\bin\Release\ERP_Khach.exe"))
                     };
 
                     foreach (string p in possiblePaths)
@@ -483,11 +508,10 @@ namespace ERP_BanHang
                         }
                     }
 
-                    // 3. Khởi chạy ứng dụng đăng nhập và đóng ứng dụng hiện tại
                     if (!string.IsNullOrEmpty(pathExeDangNhap))
                     {
                         System.Diagnostics.Process.Start(pathExeDangNhap);
-                        Application.Exit(); // Đóng hoàn toàn ERP_BanHang
+                        Application.Exit();
                     }
                     else
                     {

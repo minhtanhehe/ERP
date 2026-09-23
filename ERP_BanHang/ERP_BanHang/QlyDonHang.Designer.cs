@@ -48,7 +48,9 @@
             this.pnlMainContent = new System.Windows.Forms.Panel();
             this.BangDonHang = new System.Windows.Forms.DataGridView();
             this.pnlActionTool = new System.Windows.Forms.Panel();
-            this.cboFilterStatus = new System.Windows.Forms.ComboBox();
+            this.pnlTabs = new System.Windows.Forms.Panel();
+            this.btnTabChuaThanhToan = new System.Windows.Forms.Button();
+            this.btnTabDaThanhToan = new System.Windows.Forms.Button();
             this.txtSearch = new System.Windows.Forms.TextBox();
             this.btnCreateOrder = new System.Windows.Forms.Button();
             this.lblTitle = new System.Windows.Forms.Label();
@@ -59,6 +61,7 @@
             this.pnlMainContent.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.BangDonHang)).BeginInit();
             this.pnlActionTool.SuspendLayout();
+            this.pnlTabs.SuspendLayout();
             this.SuspendLayout();
             // 
             // pnlSidebar
@@ -304,57 +307,80 @@
             this.BangDonHang.Dock = System.Windows.Forms.DockStyle.Fill;
             this.BangDonHang.EnableHeadersVisualStyles = false;
             this.BangDonHang.GridColor = System.Drawing.Color.Gray;
-            this.BangDonHang.Location = new System.Drawing.Point(20, 140);
+            this.BangDonHang.Location = new System.Drawing.Point(20, 160);
             this.BangDonHang.Name = "BangDonHang";
             this.BangDonHang.ReadOnly = true;
             this.BangDonHang.RowHeadersVisible = false;
             this.BangDonHang.RowHeadersWidth = 51;
             this.BangDonHang.RowTemplate.Height = 45;
             this.BangDonHang.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-            this.BangDonHang.Size = new System.Drawing.Size(1020, 540);
+            this.BangDonHang.Size = new System.Drawing.Size(1020, 520);
             this.BangDonHang.TabIndex = 1;
             this.BangDonHang.CellContentClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.BangDonHang_CellContentClick);
             this.BangDonHang.CellFormatting += new System.Windows.Forms.DataGridViewCellFormattingEventHandler(this.BangDonHang_CellFormatting);
             // 
             // pnlActionTool
             // 
-            this.pnlActionTool.Controls.Add(this.cboFilterStatus);
+            this.pnlActionTool.Controls.Add(this.pnlTabs);
             this.pnlActionTool.Controls.Add(this.txtSearch);
             this.pnlActionTool.Controls.Add(this.btnCreateOrder);
             this.pnlActionTool.Controls.Add(this.lblTitle);
             this.pnlActionTool.Dock = System.Windows.Forms.DockStyle.Top;
             this.pnlActionTool.Location = new System.Drawing.Point(20, 20);
             this.pnlActionTool.Name = "pnlActionTool";
-            this.pnlActionTool.Size = new System.Drawing.Size(1020, 120);
+            this.pnlActionTool.Size = new System.Drawing.Size(1020, 140);
             this.pnlActionTool.TabIndex = 0;
             // 
-            // cboFilterStatus
+            // pnlTabs
             // 
-            this.cboFilterStatus.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.cboFilterStatus.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.cboFilterStatus.Font = new System.Drawing.Font("Segoe UI", 9.5F);
-            this.cboFilterStatus.FormattingEnabled = true;
-            this.cboFilterStatus.Items.AddRange(new object[] {
-            "Tất cả trạng thái",
-            "Đã xác nhận",
-            "Chờ xử lý",
-            "Đang giao",
-            "Hoàn thành"});
-            this.cboFilterStatus.Location = new System.Drawing.Point(820, 75);
-            this.cboFilterStatus.Name = "cboFilterStatus";
-            this.cboFilterStatus.Size = new System.Drawing.Size(200, 29);
-            this.cboFilterStatus.TabIndex = 4;
-            this.cboFilterStatus.SelectedIndexChanged += new System.EventHandler(this.cboFilterStatus_SelectedIndexChanged);
+            this.pnlTabs.Controls.Add(this.btnTabChuaThanhToan);
+            this.pnlTabs.Controls.Add(this.btnTabDaThanhToan);
+            this.pnlTabs.Location = new System.Drawing.Point(0, 50);
+            this.pnlTabs.Name = "pnlTabs";
+            this.pnlTabs.Size = new System.Drawing.Size(360, 40);
+            this.pnlTabs.TabIndex = 5;
+            // 
+            // btnTabChuaThanhToan
+            // 
+            this.btnTabChuaThanhToan.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(13)))), ((int)(((byte)(110)))), ((int)(((byte)(253)))));
+            this.btnTabChuaThanhToan.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.btnTabChuaThanhToan.FlatAppearance.BorderSize = 0;
+            this.btnTabChuaThanhToan.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnTabChuaThanhToan.Font = new System.Drawing.Font("Segoe UI Semibold", 9.5F, System.Drawing.FontStyle.Bold);
+            this.btnTabChuaThanhToan.ForeColor = System.Drawing.Color.White;
+            this.btnTabChuaThanhToan.Location = new System.Drawing.Point(0, 0);
+            this.btnTabChuaThanhToan.Name = "btnTabChuaThanhToan";
+            this.btnTabChuaThanhToan.Size = new System.Drawing.Size(175, 36);
+            this.btnTabChuaThanhToan.TabIndex = 0;
+            this.btnTabChuaThanhToan.Text = "Chưa thanh toán";
+            this.btnTabChuaThanhToan.UseVisualStyleBackColor = false;
+            this.btnTabChuaThanhToan.Click += new System.EventHandler(this.btnTabChuaThanhToan_Click);
+            // 
+            // btnTabDaThanhToan
+            // 
+            this.btnTabDaThanhToan.BackColor = System.Drawing.Color.LightGray;
+            this.btnTabDaThanhToan.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.btnTabDaThanhToan.FlatAppearance.BorderSize = 0;
+            this.btnTabDaThanhToan.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnTabDaThanhToan.Font = new System.Drawing.Font("Segoe UI Semibold", 9.5F, System.Drawing.FontStyle.Bold);
+            this.btnTabDaThanhToan.ForeColor = System.Drawing.Color.Black;
+            this.btnTabDaThanhToan.Location = new System.Drawing.Point(180, 0);
+            this.btnTabDaThanhToan.Name = "btnTabDaThanhToan";
+            this.btnTabDaThanhToan.Size = new System.Drawing.Size(175, 36);
+            this.btnTabDaThanhToan.TabIndex = 1;
+            this.btnTabDaThanhToan.Text = "Đã thanh toán";
+            this.btnTabDaThanhToan.UseVisualStyleBackColor = false;
+            this.btnTabDaThanhToan.Click += new System.EventHandler(this.btnTabDaThanhToan_Click);
             // 
             // txtSearch
             // 
-            this.txtSearch.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            this.txtSearch.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
             | System.Windows.Forms.AnchorStyles.Right)));
             this.txtSearch.Font = new System.Drawing.Font("Segoe UI", 9.5F);
             this.txtSearch.ForeColor = System.Drawing.Color.Gray;
-            this.txtSearch.Location = new System.Drawing.Point(0, 75);
+            this.txtSearch.Location = new System.Drawing.Point(0, 98);
             this.txtSearch.Name = "txtSearch";
-            this.txtSearch.Size = new System.Drawing.Size(800, 29);
+            this.txtSearch.Size = new System.Drawing.Size(1020, 29);
             this.txtSearch.TabIndex = 3;
             this.txtSearch.TextChanged += new System.EventHandler(this.txtSearch_TextChanged);
             // 
@@ -407,6 +433,7 @@
             ((System.ComponentModel.ISupportInitialize)(this.BangDonHang)).EndInit();
             this.pnlActionTool.ResumeLayout(false);
             this.pnlActionTool.PerformLayout();
+            this.pnlTabs.ResumeLayout(false);
             this.ResumeLayout(false);
 
         }
@@ -433,7 +460,9 @@
         private System.Windows.Forms.Label lblTitle;
         private System.Windows.Forms.Button btnCreateOrder;
         private System.Windows.Forms.TextBox txtSearch;
-        private System.Windows.Forms.ComboBox cboFilterStatus;
         private System.Windows.Forms.DataGridView BangDonHang;
+        private System.Windows.Forms.Panel pnlTabs;
+        private System.Windows.Forms.Button btnTabChuaThanhToan;
+        private System.Windows.Forms.Button btnTabDaThanhToan;
     }
 }

@@ -1,4 +1,4 @@
-﻿using Npgsql;
+using Npgsql;
 using OfficeOpenXml;
 using OfficeOpenXml.Style;
 using System;
@@ -336,6 +336,11 @@ namespace ERP_BanHang
                 MessageBox.Show("Không có dữ liệu trong bảng để xuất báo cáo!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
+
+            // =========================================================================
+            // THIẾT LẬP CẤU HÌNH LICENSE CHO EPPLUS ĐỂ TRÁNH LỖI LICENSE KHI XUẤT FILE
+            // =========================================================================
+            ExcelPackage.License.SetNonCommercialPersonal("Acecook ERP");
 
             using (SaveFileDialog sfd = new SaveFileDialog())
             {

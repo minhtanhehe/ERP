@@ -380,9 +380,8 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="resources\2e4d8137e16961373878.jpg" />
+    <Content Include="convertico-noodles_8932794.ico" />
     <None Include="resources\acecook.jpg" />
-    <Content Include="resources\Screenshot 2026-09-18 020356.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
