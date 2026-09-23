@@ -6,15 +6,6 @@ using System.Data.SqlClient;
 
 namespace HR_Management.DAL
 {
-    public class DashboardOverviewDTO
-    {
-        public int TongNhanVien { get; set; }
-        public int TongPhongBan { get; set; }
-        public int HopDongHieuLuc { get; set; }
-        public int HopDongSapHetHan { get; set; }
-        public int NhanVienMoiThangNay { get; set; }
-    }
-
     public class ThongKeBaoCaoDAL
     {
         public DashboardOverviewDTO GetOverview()
@@ -29,7 +20,7 @@ namespace HR_Management.DAL
                     WHERE TrangThai IS NULL 
                        OR (TrangThai NOT LIKE '%nghỉ%' AND TrangThai NOT LIKE '%NGHI%')"));
 
-                // 2. Tổng phòng ban đang hoạt động (hỗ trợ cả HOATDONG và Hoạt động)
+                // 2. Tổng phòng ban đang hoạt động
                 dto.TongPhongBan = Convert.ToInt32(DatabaseHelper.ExecuteScalar(@"
                     SELECT COUNT(*) FROM PhongBan 
                     WHERE trangThai IS NULL 
@@ -58,32 +49,75 @@ namespace HR_Management.DAL
             }
             return dto;
         }
+
+        public CompanyPayrollSummaryDTO GetCompanyPayrollSummary()
+        {
+            var summary = new CompanyPayrollSummaryDTO();
+            try
+            {
+                summary.TongPhongBan = Convert.ToInt32(DatabaseHelper.ExecuteScalar("SELECT COUNT(*) FROM PhongBan"));
+
+                summary.TongNhanVien = Convert.ToInt32(DatabaseHelper.ExecuteScalar(@"
+                    SELECT COUNT(*) FROM NhanVien 
+                    WHERE TrangThai IS NULL OR (TrangThai NOT LIKE '%nghỉ%' AND TrangThai NOT LIKE '%NGHI%')"));
+
+                string query = @"
+                    SELECT COALESCE(SUM(LuongCoBan), 0) AS TongLuong, 
+                           COALESCE(AVG(LuongCoBan), 0) AS LuongTB 
+                    FROM NhanVien 
+                    WHERE TrangThai IS NULL OR (TrangThai NOT LIKE '%nghỉ%' AND TrangThai NOT LIKE '%NGHI%')";
+                DataTable dt = DatabaseHelper.ExecuteQuery(query);
+                if (dt.Rows.Count > 0)
+                {
+                    summary.TongQuyLuong = dt.Rows[0]["TongLuong"] != DBNull.Value ? Convert.ToDecimal(dt.Rows[0]["TongLuong"]) : 0;
+                    summary.LuongTrungBinh = dt.Rows[0]["LuongTB"] != DBNull.Value ? Convert.ToDecimal(dt.Rows[0]["LuongTB"]) : 0;
+                }
+            }
+            catch
+            {
+                // Fallback
+            }
+            return summary;
+        }
+
         public DataTable GetDepartmentStats()
         {
             string query = @"
-                SELECT p.maPhongBan AS [Mã PB], p.tenPhongBan AS [Tên Phòng Ban], 
-                       p.truongPhong AS [Trưởng Phòng],
-                       COUNT(nv.ID_NV) AS [Số Nhân Viên],
-                       ISNULL(AVG(nv.LuongCoBan), 0) AS [Lương TB]
+                SELECT p.maPhongBan, 
+                       p.tenPhongBan, 
+                       COALESCE(p.truongPhong, N'Chưa có') AS truongPhong,
+                       COUNT(nv.ID_NV) AS soNhanVien,
+                       ROUND(COALESCE(AVG(nv.LuongCoBan), 0), 0) AS luongTB,
+                       COALESCE(SUM(nv.LuongCoBan), 0) AS tongQuyLuong,
+                       COALESCE(p.trangThai, N'Hoạt động') AS trangThai
                 FROM PhongBan p
-                LEFT JOIN NhanVien nv ON p.maPhongBan = nv.maPhongBan
-                GROUP BY p.maPhongBan, p.tenPhongBan, p.truongPhong
-                ORDER BY [Số Nhân Viên] DESC";
+                LEFT JOIN NhanVien nv ON p.maPhongBan = nv.maPhongBan 
+                     AND (nv.TrangThai IS NULL OR (nv.TrangThai NOT LIKE '%nghỉ%' AND nv.TrangThai NOT LIKE '%NGHI%'))
+                GROUP BY p.maPhongBan, p.tenPhongBan, p.truongPhong, p.trangThai
+                ORDER BY soNhanVien DESC, p.maPhongBan ASC";
 
             return DatabaseHelper.ExecuteQuery(query);
         }
 
-        public DataTable GetEducationStats()
+        public DataTable GetContractTypeStats()
         {
-            string query = @"
-                SELECT ISNULL(tt.trinhDo, N'Chưa cập nhật') AS [Trình Độ], 
-                       COUNT(nv.ID_NV) AS [Số Lượng]
-                FROM NhanVien nv
-                LEFT JOIN ThongTinNhanVien tt ON nv.ID_NV = tt.ID_NV
-                GROUP BY tt.trinhDo
-                ORDER BY [Số Lượng] DESC";
+            try
+            {
+                string query = @"
+                    SELECT COALESCE(hd.loaiHopDong, N'Chưa ký HĐ') AS loaiHopDong,
+                           COUNT(hd.maHopDong) AS soLuong,
+                           COALESCE(SUM(hd.luongCoBan), 0) AS tongLuongThoaThuan
+                    FROM HopDong hd
+                    WHERE hd.trangThai = 'Hiệu lực' OR UPPER(hd.trangThai) LIKE '%HIEU%' OR UPPER(hd.trangThai) LIKE '%HOAT%'
+                    GROUP BY hd.loaiHopDong
+                    ORDER BY soLuong DESC";
 
-            return DatabaseHelper.ExecuteQuery(query);
+                return DatabaseHelper.ExecuteQuery(query);
+            }
+            catch
+            {
+                return new DataTable();
+            }
         }
 
         public List<ThongKeBaoCaoDTO> GetAllReports()
@@ -130,16 +164,34 @@ namespace HR_Management.DAL
             return DatabaseHelper.ExecuteNonQuery(query, param) > 0;
         }
 
+        public bool DeleteReport(string maBaoCao)
+        {
+            string query = "DELETE FROM ThongKeBaoCao WHERE maBaoCao = @maBaoCao";
+            SqlParameter[] param = { new SqlParameter("@maBaoCao", maBaoCao) };
+            return DatabaseHelper.ExecuteNonQuery(query, param) > 0;
+        }
+
         public string GenerateNextId()
         {
-            string query = "SELECT MAX(CAST(SUBSTRING(maBaoCao, 3, LEN(maBaoCao) - 2) AS INT)) FROM ThongKeBaoCao WHERE maBaoCao LIKE 'BC%' AND ISNUMERIC(SUBSTRING(maBaoCao, 3, LEN(maBaoCao) - 2)) = 1";
-            object? result = DatabaseHelper.ExecuteScalar(query);
-            int nextNumber = 1;
-            if (result != null && result != DBNull.Value)
+            try
             {
-                nextNumber = Convert.ToInt32(result) + 1;
+                string query = "SELECT maBaoCao FROM ThongKeBaoCao WHERE maBaoCao LIKE 'BC%'";
+                DataTable dt = DatabaseHelper.ExecuteQuery(query);
+                int nextNumber = 1;
+                foreach (DataRow row in dt.Rows)
+                {
+                    string idStr = row[0]?.ToString() ?? "";
+                    if (idStr.Length > 2 && int.TryParse(idStr.Substring(2), out int num))
+                    {
+                        if (num >= nextNumber) nextNumber = num + 1;
+                    }
+                }
+                return $"BC{nextNumber:D3}";
             }
-            return $"BC{nextNumber:D3}";
+            catch
+            {
+                return $"BC{DateTime.Now:fff}";
+            }
         }
     }
 }

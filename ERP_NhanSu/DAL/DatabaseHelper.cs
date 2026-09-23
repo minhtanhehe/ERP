@@ -231,6 +231,9 @@ namespace HR_Management.DAL
             // 3. Chuyển [Tên Cột] thành "Tên Cột"
             res = res.Replace('[', '"').Replace(']', '"');
 
+            // 4. Chuyển ISNULL thành COALESCE
+            res = Regex.Replace(res, @"(?i)\bISNULL\b", "COALESCE");
+
             return res;
         }
     }

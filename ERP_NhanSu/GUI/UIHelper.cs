@@ -58,7 +58,9 @@ namespace HR_Management.GUI
                     string colName = dgv.Columns[e.ColumnIndex].DataPropertyName;
                     if (string.IsNullOrEmpty(colName)) colName = dgv.Columns[e.ColumnIndex].Name;
 
-                    if ((colName == "TrangThai" || colName == "VaiTro") && e.Graphics != null)
+                    if ((colName.Equals("TrangThai", StringComparison.OrdinalIgnoreCase) || 
+                         colName.Equals("VaiTro", StringComparison.OrdinalIgnoreCase) ||
+                         colName.Equals("LoaiBaoCao", StringComparison.OrdinalIgnoreCase)) && e.Graphics != null)
                     {
                         e.PaintBackground(e.CellBounds, true);
                         string text = e.Value.ToString() ?? "";
@@ -70,7 +72,7 @@ namespace HR_Management.GUI
                         {
                             bg = ThemeColor.SuccessBg; fg = ThemeColor.SuccessText;
                         }
-                        else if (text.Contains("Thử việc") || text.Contains("Sắp hết hạn") || text.Contains("Tạm ngừng"))
+                        else if (text.Contains("Thử việc") || text.Contains("Sắp hết hạn") || text.Contains("Tạm ngừng") || text.Contains("Biến động"))
                         {
                             bg = ThemeColor.WarningBg; fg = ThemeColor.WarningText;
                         }
@@ -82,13 +84,17 @@ namespace HR_Management.GUI
                         {
                             bg = ThemeColor.PurpleBg; fg = ThemeColor.PurpleText;
                         }
-                        else if (text.Contains("Trưởng phòng"))
+                        else if (text.Contains("Trưởng phòng") || text.Contains("Hợp đồng"))
                         {
                             bg = ThemeColor.InfoBg; fg = ThemeColor.InfoText;
                         }
-                        else if (text.Contains("HR") || text.Contains("Nhân sự"))
+                        else if (text.Contains("HR") || text.Contains("Nhân sự") || text.Contains("Cơ cấu") || text.Contains("Phòng ban"))
                         {
                             bg = ThemeColor.PrimaryLight; fg = ThemeColor.Primary;
+                        }
+                        else if (text.Contains("Quỹ lương") || text.Contains("Lương"))
+                        {
+                            bg = ThemeColor.SuccessBg; fg = ThemeColor.SuccessText;
                         }
 
                         e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;

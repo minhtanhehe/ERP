@@ -15,14 +15,19 @@ namespace HR_Management.BLL
             return _dal.GetOverview();
         }
 
+        public CompanyPayrollSummaryDTO GetCompanyPayrollSummary()
+        {
+            return _dal.GetCompanyPayrollSummary();
+        }
+
         public DataTable GetDepartmentStats()
         {
             return _dal.GetDepartmentStats();
         }
 
-        public DataTable GetEducationStats()
+        public DataTable GetContractTypeStats()
         {
-            return _dal.GetEducationStats();
+            return _dal.GetContractTypeStats();
         }
 
         public List<ThongKeBaoCaoDTO> GetAllReports()
@@ -57,6 +62,25 @@ namespace HR_Management.BLL
             catch (Exception ex)
             {
                 error = "Lỗi lưu báo cáo: " + ex.Message;
+                return false;
+            }
+        }
+
+        public bool DeleteReport(string maBaoCao, out string error)
+        {
+            error = string.Empty;
+            try
+            {
+                if (string.IsNullOrWhiteSpace(maBaoCao))
+                {
+                    error = "Mã báo cáo không hợp lệ!";
+                    return false;
+                }
+                return _dal.DeleteReport(maBaoCao);
+            }
+            catch (Exception ex)
+            {
+                error = "Lỗi xóa báo cáo: " + ex.Message;
                 return false;
             }
         }
