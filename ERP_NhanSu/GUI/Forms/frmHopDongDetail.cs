@@ -258,9 +258,48 @@ namespace HR_Management.GUI.Forms
 
         private void BtnSave_Click(object? sender, EventArgs e)
         {
-            hopDongData.MaHopDong = txtMaHopDong.Text.Trim();
-            hopDongData.ID_NV = cboNhanVien.SelectedValue?.ToString() ?? "";
-            hopDongData.LoaiHopDong = cboLoaiHopDong.SelectedItem?.ToString() ?? "";
+            string maHd = txtMaHopDong.Text.Trim();
+            string? idNv = cboNhanVien.SelectedValue?.ToString();
+            string? loaiHd = cboLoaiHopDong.SelectedItem?.ToString();
+
+            if (string.IsNullOrWhiteSpace(maHd))
+            {
+                txtMaHopDong.Focus();
+                MessageBox.Show("Mã hợp đồng không được để trống!", "Thiếu thông tin", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(idNv))
+            {
+                cboNhanVien.Focus();
+                MessageBox.Show("Vui lòng chọn nhân viên ký hợp đồng!", "Thiếu thông tin", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(loaiHd))
+            {
+                cboLoaiHopDong.Focus();
+                MessageBox.Show("Vui lòng chọn loại hợp đồng lao động!", "Thiếu thông tin", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            if (!chkKhongThoiHan.Checked && dtpNgayKetThuc.Value.Date <= dtpNgayBatDau.Value.Date)
+            {
+                dtpNgayKetThuc.Focus();
+                MessageBox.Show("Ngày kết thúc hợp đồng phải sau ngày bắt đầu hợp đồng!", "Thời gian không hợp lệ", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            if (!ValidationHelper.IsValidSalary(nudLuongCoBan.Value, out string errSalary))
+            {
+                nudLuongCoBan.Focus();
+                MessageBox.Show(errSalary, "Mức lương không hợp lệ", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            hopDongData.MaHopDong = maHd;
+            hopDongData.ID_NV = idNv;
+            hopDongData.LoaiHopDong = loaiHd;
             hopDongData.NgayKy = dtpNgayKy.Value;
             hopDongData.NgayBatDau = dtpNgayBatDau.Value;
             hopDongData.NgayKetThuc = chkKhongThoiHan.Checked ? (DateTime?)null : dtpNgayKetThuc.Value;

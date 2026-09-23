@@ -248,7 +248,7 @@ namespace HR_Management.GUI.Forms
             string chucVu = txtChucVu.Text.Trim();
             string? maPhongBan = cboPhongBan.SelectedValue?.ToString();
 
-            // 1. Kiểm tra các trường bắt buộc
+            // 1. Kiểm tra Mã nhân viên
             if (string.IsNullOrWhiteSpace(idNv))
             {
                 txtIdNv.Focus();
@@ -256,58 +256,39 @@ namespace HR_Management.GUI.Forms
                 return;
             }
 
-            if (string.IsNullOrWhiteSpace(tenNv))
+            // 2. Bắt lỗi Họ và tên (không được để trống, đúng định dạng, tối thiểu 2 từ)
+            if (!ValidationHelper.IsValidFullName(tenNv, out string errName))
             {
                 txtTenNv.Focus();
-                MessageBox.Show("Họ và tên nhân viên không được để trống!", "Thiếu thông tin", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show(errName, "Họ tên không hợp lệ", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
 
-            // 2. Bắt lỗi Số điện thoại: không được để trống, không được nhập chữ, phải đủ 10 số
-            if (string.IsNullOrWhiteSpace(phone))
+            // 3. Bắt lỗi Số điện thoại (10 chữ số, đúng đầu số mạng Việt Nam 03, 05, 07, 08, 09)
+            if (!ValidationHelper.IsValidPhoneNumber(phone, out string errPhone))
             {
                 txtSoDienThoai.Focus();
-                MessageBox.Show("Số điện thoại không được để trống!", "Thiếu thông tin", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show(errPhone, "Số điện thoại không hợp lệ", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
 
-            if (!System.Text.RegularExpressions.Regex.IsMatch(phone, @"^[0-9]+$"))
-            {
-                txtSoDienThoai.Focus();
-                MessageBox.Show("Số điện thoại không được nhập chữ cái hoặc ký tự đặc biệt, chỉ được nhập số!", "Sai định dạng", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
-            }
-
-            if (phone.Length != 10)
-            {
-                txtSoDienThoai.Focus();
-                MessageBox.Show($"Số điện thoại phải đủ đúng 10 số! (Hiện tại bạn đã nhập {phone.Length} số)", "Sai định dạng", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
-            }
-
-            if (!phone.StartsWith("0"))
-            {
-                txtSoDienThoai.Focus();
-                MessageBox.Show("Số điện thoại không hợp lệ! Số điện thoại tại Việt Nam phải bắt đầu bằng chữ số 0 (ví dụ: 0912345678).", "Sai định dạng", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
-            }
-
-            // 3. Bắt lỗi Email
-            if (string.IsNullOrWhiteSpace(email))
+            // 4. Bắt lỗi Email (đúng chuẩn RFC, tên miền hợp lệ)
+            if (!ValidationHelper.IsValidEmail(email, out string errEmail))
             {
                 txtEmail.Focus();
-                MessageBox.Show("Địa chỉ email không được để trống!", "Thiếu thông tin", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show(errEmail, "Email không hợp lệ", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
 
-            if (!System.Text.RegularExpressions.Regex.IsMatch(email, @"^[^@\s]+@[^@\s]+\.[^@\s]+$"))
+            // 5. Bắt lỗi Ngày sinh & Độ tuổi lao động (từ đủ 18 đến 65 tuổi)
+            if (!ValidationHelper.IsValidBirthDate(dtpNgaySinh.Value, out string errAge))
             {
-                txtEmail.Focus();
-                MessageBox.Show("Địa chỉ email không đúng định dạng (ví dụ: nhanvien@congty.com)!", "Sai định dạng", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                dtpNgaySinh.Focus();
+                MessageBox.Show(errAge, "Độ tuổi không hợp lệ", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
 
-            // 4. Phòng ban & Chức vụ
+            // 6. Phòng ban & Chức vụ
             if (string.IsNullOrWhiteSpace(maPhongBan))
             {
                 cboPhongBan.Focus();
@@ -322,11 +303,19 @@ namespace HR_Management.GUI.Forms
                 return;
             }
 
-            // 5. Địa chỉ liên hệ
+            // 7. Địa chỉ liên hệ
             if (string.IsNullOrWhiteSpace(diaChi))
             {
                 txtDiaChi.Focus();
                 MessageBox.Show("Địa chỉ liên hệ không được để trống!", "Thiếu thông tin", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            // 8. Lương cơ bản (> 0)
+            if (!ValidationHelper.IsValidSalary(nudLuongCoBan.Value, out string errSalary))
+            {
+                nudLuongCoBan.Focus();
+                MessageBox.Show(errSalary, "Mức lương không hợp lệ", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
 

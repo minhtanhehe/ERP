@@ -164,6 +164,25 @@ namespace HR_Management.DAL
             return DatabaseHelper.ExecuteNonQuery(query, param) > 0;
         }
 
+        public bool UpdateReport(ThongKeBaoCaoDTO dto)
+        {
+            string query = @"
+                UPDATE ThongKeBaoCao 
+                SET tenBaoCao = @tenBaoCao, 
+                    loaiBaoCao = @loaiBaoCao, 
+                    noiDung = @noiDung
+                WHERE maBaoCao = @maBaoCao";
+
+            SqlParameter[] param = {
+                new SqlParameter("@maBaoCao", dto.MaBaoCao),
+                new SqlParameter("@tenBaoCao", dto.TenBaoCao),
+                new SqlParameter("@loaiBaoCao", dto.LoaiBaoCao),
+                new SqlParameter("@noiDung", (object?)dto.NoiDung ?? DBNull.Value)
+            };
+
+            return DatabaseHelper.ExecuteNonQuery(query, param) > 0;
+        }
+
         public bool DeleteReport(string maBaoCao)
         {
             string query = "DELETE FROM ThongKeBaoCao WHERE maBaoCao = @maBaoCao";

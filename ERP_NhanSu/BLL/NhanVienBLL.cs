@@ -42,16 +42,16 @@ namespace HR_Management.BLL
                 return false;
             }
 
-            if (isNew && _dal.CheckIdExists(dto.ID_NV.Trim()))
+            string idNv = dto.ID_NV.Trim();
+            if (isNew && _dal.CheckIdExists(idNv))
             {
-                error = $"Mã nhân viên '{dto.ID_NV.Trim()}' đã tồn tại trong hệ thống!";
+                error = $"Mã nhân viên '{idNv}' đã tồn tại trong hệ thống!";
                 return false;
             }
 
-            // 2. Kiểm tra Họ và tên
-            if (string.IsNullOrWhiteSpace(dto.TenNV))
+            // 2. Kiểm tra Họ và tên (đúng định dạng chữ, tối thiểu 2 từ)
+            if (!ValidationHelper.IsValidFullName(dto.TenNV, out error))
             {
-                error = "Họ và tên nhân viên không được để trống!";
                 return false;
             }
 
@@ -69,93 +69,64 @@ namespace HR_Management.BLL
                 return false;
             }
 
-            // 5. Bắt lỗi Số điện thoại: không được để trống, không được nhập chữ, phải đủ 10 số, không được trùng
-            if (string.IsNullOrWhiteSpace(dto.SoDienThoai))
+            // 5. Bắt lỗi Số điện thoại (10 chữ số, mạng VN hợp lệ, không trùng)
+            if (!ValidationHelper.IsValidPhoneNumber(dto.SoDienThoai, out error))
             {
-                error = "Số điện thoại không được để trống!";
                 return false;
             }
 
-            string phone = dto.SoDienThoai.Trim();
-
-            if (!Regex.IsMatch(phone, @"^[0-9]+$"))
-            {
-                error = "Số điện thoại chỉ được chứa các chữ số, không được chứa chữ cái hoặc ký tự đặc biệt!";
-                return false;
-            }
-
-            if (phone.Length != 10)
-            {
-                error = $"Số điện thoại phải gồm đúng 10 chữ số (bạn đang nhập {phone.Length} số)!";
-                return false;
-            }
-
-            if (!phone.StartsWith("0"))
-            {
-                error = "Số điện thoại không hợp lệ! Số điện thoại tại Việt Nam phải bắt đầu bằng chữ số 0 (ví dụ: 0912345678).";
-                return false;
-            }
-
-            if (_dal.CheckPhoneExists(phone, isNew ? null : dto.ID_NV.Trim()))
+            string phone = dto.SoDienThoai!.Trim();
+            if (_dal.CheckPhoneExists(phone, isNew ? null : idNv))
             {
                 error = $"Số điện thoại '{phone}' đã tồn tại trong hệ thống (đã đăng ký cho nhân viên khác)! Vui lòng kiểm tra lại.";
                 return false;
             }
 
-            // 6. Kiểm tra Email: không được để trống, đúng định dạng, không được trùng
-            if (string.IsNullOrWhiteSpace(dto.Email))
+            // 6. Kiểm tra Email (đúng chuẩn RFC, đuôi hợp lệ, không trùng)
+            if (!ValidationHelper.IsValidEmail(dto.Email, out error))
             {
-                error = "Địa chỉ email không được để trống!";
                 return false;
             }
 
-            string email = dto.Email.Trim();
-            if (!Regex.IsMatch(email, @"^[^@\s]+@[^@\s]+\.[^@\s]+$"))
-            {
-                error = "Địa chỉ email không đúng định dạng (ví dụ: nhanvien@congty.com)!";
-                return false;
-            }
-
-            if (_dal.CheckEmailExists(email, isNew ? null : dto.ID_NV.Trim()))
+            string email = dto.Email!.Trim();
+            if (_dal.CheckEmailExists(email, isNew ? null : idNv))
             {
                 error = $"Địa chỉ email '{email}' đã tồn tại trong hệ thống (thuộc nhân viên khác)!";
                 return false;
             }
 
-            // 7. Kiểm tra Địa chỉ liên hệ
+            // 7. Kiểm tra Ngày sinh & Độ tuổi lao động (từ đủ 18 đến 65 tuổi)
+            if (!ValidationHelper.IsValidBirthDate(dto.NgaySinh, out error))
+            {
+                return false;
+            }
+
+            // 8. Kiểm tra Địa chỉ liên hệ
             if (string.IsNullOrWhiteSpace(dto.DiaChi))
             {
                 error = "Địa chỉ liên hệ không được để trống!";
                 return false;
             }
 
-            // 8. Kiểm tra CCCD (nếu có nhập)
+            // 9. Kiểm tra CCCD (nếu có nhập, đúng 12 số, không trùng)
             if (!string.IsNullOrWhiteSpace(dto.SoCCCD))
             {
-                string cccd = dto.SoCCCD.Trim();
-                if (!Regex.IsMatch(cccd, @"^[0-9]+$"))
+                if (!ValidationHelper.IsValidCitizenId(dto.SoCCCD, out error))
                 {
-                    error = "Số CCCD chỉ được chứa chữ số, không được chứa chữ cái hoặc ký tự đặc biệt!";
                     return false;
                 }
 
-                if (cccd.Length != 12)
-                {
-                    error = $"Số CCCD phải gồm đúng 12 chữ số (bạn đang nhập {cccd.Length} số)!";
-                    return false;
-                }
-
-                if (_dal.CheckCccdExists(cccd, isNew ? null : dto.ID_NV.Trim()))
+                string cccd = dto.SoCCCD!.Trim();
+                if (_dal.CheckCccdExists(cccd, isNew ? null : idNv))
                 {
                     error = $"Số CCCD '{cccd}' đã tồn tại trong hệ thống (thuộc nhân viên khác)! Vui lòng kiểm tra lại.";
                     return false;
                 }
             }
 
-            // 9. Kiểm tra Lương cơ bản
-            if (dto.LuongCoBan < 0)
+            // 10. Kiểm tra Lương cơ bản (> 0)
+            if (!ValidationHelper.IsValidSalary(dto.LuongCoBan, out error))
             {
-                error = "Mức lương cơ bản không được âm!";
                 return false;
             }
 

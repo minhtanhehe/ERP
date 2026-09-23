@@ -807,16 +807,16 @@ namespace HR_Management.GUI.Forms
             string username = txtTenDangNhap.Text.Trim();
             string password = txtMatKhau.Text.Trim();
 
-            if (string.IsNullOrWhiteSpace(username))
+            if (!ValidationHelper.IsValidUsername(username, out string errUser))
             {
-                MessageBox.Show("Vui lòng nhập tên đăng nhập cho tài khoản!", "Thiếu thông tin", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show(errUser, "Tên đăng nhập không hợp lệ", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 txtTenDangNhap.Focus();
                 return;
             }
 
-            if (string.IsNullOrWhiteSpace(password))
+            if (!ValidationHelper.IsValidPassword(password, out string errPass))
             {
-                MessageBox.Show("Vui lòng nhập mật khẩu cho tài khoản!", "Thiếu thông tin", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show(errPass, "Mật khẩu không hợp lệ", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 txtMatKhau.Focus();
                 return;
             }

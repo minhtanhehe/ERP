@@ -50,6 +50,12 @@ namespace HR_Management.BLL
                 return false;
             }
 
+            if (string.IsNullOrWhiteSpace(dto.NoiDung))
+            {
+                error = "Nội dung báo cáo không được để trống!";
+                return false;
+            }
+
             if (string.IsNullOrWhiteSpace(dto.MaBaoCao))
             {
                 dto.MaBaoCao = _dal.GenerateNextId();
@@ -62,6 +68,39 @@ namespace HR_Management.BLL
             catch (Exception ex)
             {
                 error = "Lỗi lưu báo cáo: " + ex.Message;
+                return false;
+            }
+        }
+
+        public bool UpdateReport(ThongKeBaoCaoDTO dto, out string error)
+        {
+            error = string.Empty;
+
+            if (string.IsNullOrWhiteSpace(dto.TenBaoCao))
+            {
+                error = "Tên báo cáo không được để trống!";
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(dto.NoiDung))
+            {
+                error = "Nội dung báo cáo không được để trống!";
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(dto.MaBaoCao))
+            {
+                error = "Mã báo cáo không hợp lệ!";
+                return false;
+            }
+
+            try
+            {
+                return _dal.UpdateReport(dto);
+            }
+            catch (Exception ex)
+            {
+                error = "Lỗi cập nhật báo cáo: " + ex.Message;
                 return false;
             }
         }

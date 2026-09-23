@@ -55,16 +55,18 @@ namespace HR_Management.GUI.UserControls
             };
 
             Button btnThemMoi = UIHelper.CreateButton("+ Thêm Phòng Ban", ThemeColor.Primary, Color.White, 140, 38);
+            Button btnSua = UIHelper.CreateButton("✏ Sửa", ThemeColor.Info, Color.White, 95, 38);
             Button btnLuu = UIHelper.CreateButton("💾 Lưu Thay Đổi", ThemeColor.Success, Color.White, 125, 38);
             Button btnXoa = UIHelper.CreateButton("🗑 Xóa", ThemeColor.Danger, Color.White, 85, 38);
-            Button btnLamMoi = UIHelper.CreateButton("🔄 Làm mới", Color.FromArgb(100, 116, 139), Color.White, 95, 38);
+            Button btnLamMoi = UIHelper.CreateButton("↻ Làm mới", Color.FromArgb(100, 116, 139), Color.White, 95, 38);
 
             btnThemMoi.Click += BtnThemMoi_Click;
+            btnSua.Click += BtnSua_Click;
             btnLuu.Click += BtnLuu_Click;
             btnXoa.Click += BtnXoa_Click;
             btnLamMoi.Click += (s, e) => LoadData();
 
-            pnlActions.Controls.AddRange(new Control[] { btnThemMoi, btnLuu, btnXoa, btnLamMoi });
+            pnlActions.Controls.AddRange(new Control[] { btnThemMoi, btnSua, btnLuu, btnXoa, btnLamMoi });
 
             // ===== MAIN: SplitContainer (Nằm ngang: Danh sách phòng ban ở trên, Thông tin chi tiết ở dưới) =====
             split = new SplitContainer
@@ -108,6 +110,7 @@ namespace HR_Management.GUI.UserControls
             dgvPhongBan.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "Trạng Thái", DataPropertyName = "TrangThai", FillWeight = 18 });
 
             dgvPhongBan.SelectionChanged += DgvPhongBan_SelectionChanged;
+            dgvPhongBan.DoubleClick += (s, e) => BtnSua_Click(s, e);
 
             pnlTop.Controls.Add(dgvPhongBan);
             split.Panel1.Controls.Add(pnlTop);
@@ -296,6 +299,25 @@ namespace HR_Management.GUI.UserControls
             isAddingNew = true; ResetInput(); txtMaPB.ReadOnly = false; txtMaPB.Focus();
         }
 
+        private void BtnSua_Click(object? sender, EventArgs e)
+        {
+            if (dgvPhongBan.SelectedRows.Count == 0)
+            {
+                MessageBox.Show("Vui lòng chọn một phòng ban từ danh sách để sửa thông tin!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            var selected = dgvPhongBan.SelectedRows[0].DataBoundItem as PhongBanDTO;
+            if (selected != null)
+            {
+                DisplayDepartment(selected);
+                isAddingNew = false;
+                txtMaPB.ReadOnly = true;
+                txtTenPB.Focus();
+                txtTenPB.SelectAll();
+            }
+        }
+
         private void ResetInput()
         {
             txtMaPB.Text = "PB" + DateTime.Now.ToString("MMddHHmm");
@@ -306,10 +328,29 @@ namespace HR_Management.GUI.UserControls
 
         private void BtnLuu_Click(object? sender, EventArgs e)
         {
+            string maPb = txtMaPB.Text.Trim();
+            string tenPb = txtTenPB.Text.Trim();
+
+            if (string.IsNullOrWhiteSpace(maPb))
+            {
+                txtMaPB.Focus();
+                MessageBox.Show("Mã phòng ban không được để trống!", "Thiếu thông tin", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(tenPb))
+            {
+                txtTenPB.Focus();
+                MessageBox.Show("Tên phòng ban không được để trống!", "Thiếu thông tin", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
             var pb = new PhongBanDTO
             {
-                MaPhongBan = txtMaPB.Text.Trim(), TenPhongBan = txtTenPB.Text.Trim(),
-                TruongPhong = txtTruongPhong.Text.Trim(), TrangThai = cboTrangThai.SelectedItem?.ToString() ?? "Hoạt động",
+                MaPhongBan = maPb,
+                TenPhongBan = tenPb,
+                TruongPhong = txtTruongPhong.Text.Trim(),
+                TrangThai = cboTrangThai.SelectedItem?.ToString() ?? "Hoạt động",
                 MoTa = txtMoTa.Text.Trim()
             };
             if (_bllPhongBan.Save(pb, isAddingNew, out string error))
@@ -317,7 +358,10 @@ namespace HR_Management.GUI.UserControls
                 MessageBox.Show(isAddingNew ? "Thêm phòng ban thành công!" : "Cập nhật thành công!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 LoadData();
             }
-            else MessageBox.Show(error, "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            else
+            {
+                MessageBox.Show(error, "Lỗi kiểm tra dữ liệu", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
         }
 
         private void BtnXoa_Click(object? sender, EventArgs e)

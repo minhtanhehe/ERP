@@ -336,9 +336,9 @@ namespace HR_Management.GUI.Forms
         private void BtnSave_Click(object? sender, EventArgs e)
         {
             string username = txtTenDangNhap.Text.Trim();
-            if (string.IsNullOrWhiteSpace(username))
+            if (!ValidationHelper.IsValidUsername(username, out string errUser))
             {
-                MessageBox.Show("Vui lòng nhập tên đăng nhập!", "Thiếu thông tin", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show(errUser, "Tên đăng nhập không hợp lệ", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 txtTenDangNhap.Focus();
                 return;
             }
@@ -355,6 +355,12 @@ namespace HR_Management.GUI.Forms
             string newPass = txtMatKhauMoi.Text.Trim();
             if (!string.IsNullOrEmpty(newPass))
             {
+                if (!ValidationHelper.IsValidPassword(newPass, out string errPass))
+                {
+                    MessageBox.Show(errPass, "Mật khẩu mới không hợp lệ", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    txtMatKhauMoi.Focus();
+                    return;
+                }
                 _account.MatKhau = newPass;
             }
 

@@ -82,7 +82,7 @@ namespace HR_Management.GUI.UserControls
             btnXoa.Margin = new Padding(0, 0, 10, 6);
             btnXoa.Click += BtnXoa_Click;
 
-            Button btnLamMoi = UIHelper.CreateButton("🔄 Làm mới", Color.FromArgb(100, 116, 139), Color.White, 95, 38);
+            Button btnLamMoi = UIHelper.CreateButton("↻ Làm mới", Color.FromArgb(100, 116, 139), Color.White, 95, 38);
             btnLamMoi.Margin = new Padding(0, 0, 0, 6);
             btnLamMoi.Click += (s, e) => LoadData();
 

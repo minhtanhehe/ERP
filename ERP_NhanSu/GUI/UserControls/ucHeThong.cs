@@ -48,11 +48,11 @@ namespace HR_Management.GUI.UserControls
             btnCapTK.Margin = new Padding(0, 0, 10, 6);
             btnCapTK.Click += BtnCapTK_Click;
 
-            Button btnSuaTK = UIHelper.CreateButton("✏️ Sửa TK", Color.FromArgb(2, 132, 199), Color.White, 115, 38);
+            Button btnSuaTK = UIHelper.CreateButton("✏ Sửa TK", Color.FromArgb(2, 132, 199), Color.White, 115, 38);
             btnSuaTK.Margin = new Padding(0, 0, 10, 6);
             btnSuaTK.Click += BtnSuaTK_Click;
 
-            Button btnXoaTK = UIHelper.CreateButton("🗑️ Xóa TK", ThemeColor.Danger, Color.White, 115, 38);
+            Button btnXoaTK = UIHelper.CreateButton("🗑 Xóa TK", ThemeColor.Danger, Color.White, 115, 38);
             btnXoaTK.Margin = new Padding(0, 0, 10, 6);
             btnXoaTK.Click += BtnXoaTK_Click;
 
@@ -64,7 +64,7 @@ namespace HR_Management.GUI.UserControls
             btnToggleStatus.Margin = new Padding(0, 0, 10, 6);
             btnToggleStatus.Click += BtnToggleStatus_Click;
 
-            Button btnLamMoi = UIHelper.CreateButton("🔄 Làm mới", Color.FromArgb(148, 163, 184), Color.White, 110, 38);
+            Button btnLamMoi = UIHelper.CreateButton("↻ Làm mới", Color.FromArgb(148, 163, 184), Color.White, 110, 38);
             btnLamMoi.Margin = new Padding(0, 0, 0, 6);
             btnLamMoi.Click += (s, e) => LoadData();
 

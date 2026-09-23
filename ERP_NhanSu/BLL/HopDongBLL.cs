@@ -40,15 +40,20 @@ namespace HR_Management.BLL
                 return false;
             }
 
-            if (hd.NgayKetThuc.HasValue && hd.NgayKetThuc.Value < hd.NgayBatDau)
+            if (string.IsNullOrWhiteSpace(hd.LoaiHopDong))
             {
-                error = "Ngày kết thúc hợp đồng không được nhỏ hơn ngày bắt đầu!";
+                error = "Vui lòng chọn loại hợp đồng lao động!";
                 return false;
             }
 
-            if (hd.LuongCoBan < 0)
+            if (hd.NgayKetThuc.HasValue && hd.NgayKetThuc.Value <= hd.NgayBatDau)
             {
-                error = "Mức lương cơ bản không được âm!";
+                error = "Ngày kết thúc hợp đồng phải sau ngày bắt đầu hợp đồng!";
+                return false;
+            }
+
+            if (!ValidationHelper.IsValidSalary(hd.LuongCoBan, out error))
+            {
                 return false;
             }
 

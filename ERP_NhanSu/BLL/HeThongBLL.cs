@@ -231,21 +231,19 @@ namespace HR_Management.BLL
         {
             error = string.Empty;
 
-            if (string.IsNullOrWhiteSpace(ht.TenDangNhap))
-            {
-                error = "Tên đăng nhập không được để trống!";
-                return false;
-            }
-
-            if (string.IsNullOrWhiteSpace(ht.MatKhau))
-            {
-                error = "Mật khẩu không được để trống!";
-                return false;
-            }
-
             if (string.IsNullOrWhiteSpace(ht.ID_NV))
             {
                 error = "Vui lòng chọn nhân viên sở hữu tài khoản!";
+                return false;
+            }
+
+            if (!ValidationHelper.IsValidUsername(ht.TenDangNhap, out error))
+            {
+                return false;
+            }
+
+            if (!ValidationHelper.IsValidPassword(ht.MatKhau, out error))
+            {
                 return false;
             }
 
@@ -275,9 +273,13 @@ namespace HR_Management.BLL
                 return false;
             }
 
-            if (string.IsNullOrWhiteSpace(ht.TenDangNhap))
+            if (!ValidationHelper.IsValidUsername(ht.TenDangNhap, out error))
             {
-                error = "Tên đăng nhập không được để trống!";
+                return false;
+            }
+
+            if (!string.IsNullOrEmpty(ht.MatKhau) && !ValidationHelper.IsValidPassword(ht.MatKhau, out error))
+            {
                 return false;
             }
 

@@ -139,15 +139,21 @@ namespace HR_Management.GUI
 
         public static Button CreateButton(string text, Color backColor, Color foreColor, int width = 130, int height = 44)
         {
+            Size sz = TextRenderer.MeasureText(text, ThemeColor.BodyFontBold);
+            int finalWidth = Math.Max(width, sz.Width + 24);
+
             Button btn = new Button
             {
                 Text = text,
                 BackColor = backColor,
                 ForeColor = foreColor,
-                MinimumSize = new Size(width, height),
-                AutoSize = true,
-                AutoSizeMode = AutoSizeMode.GrowAndShrink,
-                Padding = new Padding(16, 8, 16, 8),
+                Size = new Size(finalWidth, height),
+                MinimumSize = new Size(finalWidth, height),
+                MaximumSize = new Size(0, height),
+                AutoSize = false,
+                Padding = Padding.Empty,
+                TextAlign = ContentAlignment.MiddleCenter,
+                UseCompatibleTextRendering = false,
                 FlatStyle = FlatStyle.Flat,
                 Font = ThemeColor.BodyFontBold,
                 Cursor = Cursors.Hand,
