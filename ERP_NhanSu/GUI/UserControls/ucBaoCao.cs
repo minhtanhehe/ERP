@@ -937,7 +937,12 @@ namespace HR_Management.GUI.UserControls
                     }
                     catch (Exception ex)
                     {
-                        MessageBox.Show("Lỗi xuất PDF: " + ex.Message, "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        string errorMsg = ex.Message;
+                        if (ex.InnerException != null)
+                        {
+                            errorMsg += "\nChi tiết: " + ex.InnerException.Message;
+                        }
+                        MessageBox.Show("Lỗi xuất PDF: " + errorMsg, "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     }
                 }
             }
